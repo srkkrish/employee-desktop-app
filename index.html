@@ -1,0 +1,325 @@
+<!-- https://www.youtube.com/watch?v=m3OjWNFREJo -->
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Employee</title>
+
+    <style>
+      body {
+        padding: 20px;
+        background-color: peachpuff;
+        font-family: Arial, sans-serif;
+      }
+
+      .buttons {
+        width: 100%;
+        gap: 10px;
+        display: flex;
+        justify-content: end;
+      }
+
+      .add-employee-button,
+      .clear-list-button {
+        background: #0078d4;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+
+      .dialog-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .dialog {
+        width: 450px;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+      }
+
+      .dialog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+
+      .dialog-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .save-btn {
+        background: #0078d4;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        cursor: pointer;
+      }
+
+      .cancel-btn {
+        padding: 8px 15px;
+        cursor: pointer;
+      }
+
+      .close-btn {
+        border: none;
+        background: none;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      .employee-table {
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        color: white;
+        background-color: #0078d4;
+      }
+
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Employee Details</h1>
+    <div class="buttons">
+      <button class="add-employee-button" onclick="addEmployee()">
+        Add Employee
+      </button>
+
+      <button
+        class="clear-list-button"
+        onclick="
+          employees = [];
+          localStorage.clear();
+          renderTableBody();
+        "
+      >
+        Clear List
+      </button>
+    </div>
+
+    <div class="dialog-overlay">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h2>Add Employee</h2>
+          <button class="close-btn">&times;</button>
+        </div>
+
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="name" />
+        </div>
+
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="age" />
+        </div>
+
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="gender">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Company</label>
+          <input type="text" id="company" />
+        </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="location" />
+        </div>
+
+        <div class="dialog-footer">
+          <button class="cancel-btn">Cancel</button>
+          <button class="save-btn">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="employee-table">
+      <table>
+        <thead>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Gender</th>
+          <th>Company</th>
+          <th>Location</th>
+          <th>Actions</th>
+        </thead>
+
+        <tbody id="employeeTableBody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      let employees = [];
+      let mode = "add";
+      let editIndex = -1;
+      const dialog = document.querySelector(".dialog-overlay");
+
+      window.onload = () => {
+        employees = JSON.parse(localStorage.getItem("employees")) || [];
+        renderTableBody();
+      };
+
+      function addEmployee() {
+        mode = "add";
+        editIndex = -1;
+        document.querySelector(".save-btn").textContent = "Save";
+        document.querySelector(".dialog-header h2").textContent =
+          "Add Employee";
+        dialog.style.display = "flex";
+      }
+
+      function clearList() {
+        clearForm();
+      }
+
+      function editEmployee(index) {
+        mode = "edit";
+        editIndex = index;
+        const data = employees[index];
+        document.getElementById("name").value = data.name;
+        document.getElementById("age").value = data.age;
+        document.getElementById("gender").value = data.gender;
+        document.getElementById("company").value = data.company;
+        document.getElementById("location").value = data.location;
+        document.querySelector(".save-btn").textContent = "Update";
+        document.querySelector(".dialog-header h2").textContent =
+          "Edit Employee";
+        dialog.style.display = "flex";
+      }
+
+      function deleteEmployee(index) {
+        if (!confirm("Are you sure you want to delete this employee?")) {
+          return;
+        }
+        employees.splice(index, 1);
+        localStorage.setItem("employees", JSON.stringify(employees));
+        renderTableBody();
+      }
+
+      function clearForm() {
+        document.getElementById("name").value = "";
+        document.getElementById("age").value = "";
+        document.getElementById("gender").selectedIndex = 0;
+        document.getElementById("company").value = "";
+        document.getElementById("location").value = "";
+      }
+
+      function renderTableBody() {
+        const tbody = document.getElementById("employeeTableBody");
+        tbody.innerHTML = "";
+        employees.forEach((emp, index) => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${emp.name}</td>
+              <td>${emp.age}</td>
+              <td>${emp.gender}</td>
+              <td>${emp.company}</td>
+              <td>${emp.location}</td>
+              <td>
+                <div style="display: flex; gap: 5px;">
+                  <button style="cursor: pointer" onclick="editEmployee(${index})">
+                    Edit
+                  </button>
+
+                  <button style="cursor: pointer" onclick="deleteEmployee(${index})">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      document.querySelector(".close-btn").addEventListener("click", () => {
+        dialog.style.display = "none";
+      });
+      document.querySelector(".cancel-btn").addEventListener("click", () => {
+        clearForm();
+        dialog.style.display = "none";
+      });
+      document.querySelector(".save-btn").addEventListener("click", () => {
+        const name = document.getElementById("name").value;
+        const age = document.getElementById("age").value;
+        const gender = document.getElementById("gender").value;
+        const company = document.getElementById("company").value;
+        const location = document.getElementById("location").value;
+        if (!name || !age || !gender || !company || !location) {
+          alert("Please fill all fields");
+          return;
+        }
+        const employee = {
+          name: name,
+          age: age,
+          gender: gender,
+          company: company,
+          location: location,
+        };
+        console.table("Employee:", employee);
+        if (mode === "edit") {
+          employees[editIndex] = employee;
+          alert("Employee updated successfully");
+        } else {
+          employees.push(employee);
+          alert("Employee added successfully");
+        }
+        localStorage.setItem("employees", JSON.stringify(employees));
+        renderTableBody();
+        mode = "add";
+        editIndex = -1;
+        document.querySelector(".save-btn").textContent = "Save";
+        dialog.style.display = "none";
+        clearForm();
+      });
+    </script>
+  </body>
+</html>
